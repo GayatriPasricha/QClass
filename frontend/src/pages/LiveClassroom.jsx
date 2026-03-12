@@ -5,7 +5,7 @@ import { ThumbsUp, Pin, CheckCircle, Send, ArrowLeft, GraduationCap, Users } fro
 import { useAuth } from '../context/AuthContext';
 import API from '../utils/api';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 const LiveClassroom = () => {
     const { classroomId } = useParams();
