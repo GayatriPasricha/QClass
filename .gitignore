@@ -1,0 +1,16 @@
+# Environment Variables
+.env
+db-error.log
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build Output
+dist/
+frontend/dist/
+
+# IDE & OS Files
+.vscode/
+.DS_Store
+Thumbs.db
