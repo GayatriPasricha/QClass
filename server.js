@@ -1,15 +1,26 @@
 
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const connectDB = require('./src/config/db');
+
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB();
+// Handle uncaught exceptions and unhandled rejections cleanly
+process.on('uncaughtException', (err) => {
+    console.error('[CRITICAL] Uncaught Exception:', err.message);
+    console.error(err.stack);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -71,15 +82,20 @@ server.on('listening', () => {
     console.log(`Server successfully started and running on port ${boundPort}`);
 });
 
-const startServer = (port) => {
+const listenServer = (port) => {
     server.removeAllListeners('error');
     
     server.on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
-            console.warn(`[WARNING] Port ${port} is already in use.`);
-            const nextPort = port + 1;
-            console.log(`[INFO] Retrying to start server on fallback port ${nextPort}...`);
-            startServer(nextPort);
+            if (process.env.NODE_ENV === 'production') {
+                console.error(`[CRITICAL] Port ${port} is already in use in production mode. Refusing to fall back to a different port.`);
+                process.exit(1);
+            } else {
+                console.warn(`[WARNING] Port ${port} is already in use.`);
+                const nextPort = port + 1;
+                console.log(`[INFO] Retrying to start server on fallback port ${nextPort}...`);
+                listenServer(nextPort);
+            }
         } else {
             console.error('[CRITICAL] Server startup failed with error:', err);
             process.exit(1);
@@ -89,4 +105,20 @@ const startServer = (port) => {
     server.listen(port);
 };
 
-startServer(initialPort);
+// Async wrapper to ensure database is connected before starting the server
+const bootApp = async () => {
+    try {
+        console.log('Connecting to database...');
+        await connectDB();
+        
+        // Start listening
+        listenServer(initialPort);
+    } catch (error) {
+        console.error('[CRITICAL] Failed to connect to the database. Exiting process...');
+        console.error(error.message);
+        process.exit(1);
+    }
+};
+
+bootApp();
+
