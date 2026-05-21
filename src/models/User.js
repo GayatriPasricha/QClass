@@ -15,12 +15,22 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
+            required: function() {
+                return !this.googleId;
+            },
         },
         role: {
             type: String,
             enum: ['teacher', 'student'],
             required: true,
+        },
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true,
+        },
+        avatar: {
+            type: String,
         },
     },
     {
@@ -30,15 +40,21 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        next();
+    if (!this.password || !this.isModified('password')) {
+        return next();
     }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
 
 // Match user entered password to hashed password in database
 userSchema.methods.matchPassword = async function (enteredPassword) {
+    if (!this.password) return false;
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

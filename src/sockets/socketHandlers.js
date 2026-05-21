@@ -41,7 +41,7 @@ const socketHandlers = (io) => {
             try {
                 const question = await Question.findById(questionId);
 
-                if (question && !question.upvotes.includes(studentId)) {
+                if (question && !question.upvotes.some(id => id.toString() === studentId.toString())) {
                     question.upvotes.push(studentId);
                     await question.save();
 
