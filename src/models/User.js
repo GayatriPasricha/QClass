@@ -15,19 +15,12 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: function() {
-                return !this.googleId;
-            },
+            required: true,
         },
         role: {
             type: String,
             enum: ['teacher', 'student'],
             required: true,
-        },
-        googleId: {
-            type: String,
-            unique: true,
-            sparse: true,
         },
         avatar: {
             type: String,

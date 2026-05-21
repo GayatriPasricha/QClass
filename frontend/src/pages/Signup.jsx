@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,54 +11,7 @@ const Signup = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-    useEffect(() => {
-        if (!googleClientId) {
-            console.warn("Google Client ID is missing. Google Sign-Up button will not render.");
-            return;
-        }
-
-        const initGoogle = () => {
-            if (window.google) {
-                window.google.accounts.id.initialize({
-                    client_id: googleClientId,
-                    callback: handleGoogleResponse,
-                });
-                window.google.accounts.id.renderButton(
-                    document.getElementById('googleSignUpButton'),
-                    {
-                        theme: 'filled_black',
-                        size: 'large',
-                        width: '100%',
-                        text: 'signup_with',
-                        shape: 'rectangular',
-                    }
-                );
-            } else {
-                setTimeout(initGoogle, 500);
-            }
-        };
-
-        initGoogle();
-    }, [googleClientId, form.role]);
-
-    const handleGoogleResponse = async (response) => {
-        setLoading(true);
-        setError('');
-        try {
-            const { data } = await API.post('/auth/google', {
-                credential: response.credential,
-                role: form.role,
-            });
-            login(data);
-            navigate('/dashboard');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Google registration failed. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -115,11 +68,7 @@ const Signup = () => {
                         </div>
                     )}
                     
-                    {!googleClientId && (
-                        <div className="mb-4 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs rounded-xl px-4 py-3">
-                            Google Registration is available! To configure it, set <code className="bg-amber-950/40 px-1 rounded">VITE_GOOGLE_CLIENT_ID</code> in your frontend .env file.
-                        </div>
-                    )}
+
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
@@ -153,22 +102,7 @@ const Signup = () => {
                         </button>
                     </form>
 
-                    {googleClientId && (
-                        <>
-                            <div className="relative my-5">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-700/50"></div>
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-[#161922] px-3 text-gray-500 font-medium">Or continue with</span>
-                                </div>
-                            </div>
 
-                            <div className="w-full flex justify-center">
-                                <div id="googleSignUpButton" className="w-full"></div>
-                            </div>
-                        </>
-                    )}
 
                     <p className="text-center text-sm text-gray-500 mt-5">
                         Already have an account?{' '}

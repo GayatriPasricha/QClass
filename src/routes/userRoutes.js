@@ -30,7 +30,14 @@ router.put('/profile', protect, async (req, res) => {
 
         if (user) {
             user.name = req.body.name || user.name;
-            user.email = req.body.email || user.email;
+
+            if (req.body.email && req.body.email.toLowerCase() !== user.email) {
+                const emailExists = await User.findOne({ email: req.body.email.toLowerCase() });
+                if (emailExists) {
+                    return res.status(400).json({ message: 'Email is already in use by another account' });
+                }
+                user.email = req.body.email;
+            }
 
             if (req.body.password) {
                 user.password = req.body.password;
